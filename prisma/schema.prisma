@@ -6,3 +6,141 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Users {
+  id       String @id @default(uuid())
+  name     String @db.VarChar(100)
+  email    String @unique @db.VarChar(254)
+  role     Role   @default(USER)
+  password String @db.VarChar(100)
+
+  sales          Sales[]
+  stockMovements StockMovements[]
+
+  @@map("users")
+}
+
+model Categories {
+  id   String @id @default(uuid())
+  name String @unique @db.VarChar(50)
+
+  products Products[]
+
+  @@map("categories")
+}
+
+model Suppliers {
+  id    String @id @default(uuid())
+  name  String @unique @db.VarChar(150)
+  email String @unique @db.VarChar(254)
+  phone String @db.VarChar(15)
+  cnpj  String @unique @db.VarChar(14)
+
+  products Products[]
+
+  @@map("suppliers")
+}
+
+model Products {
+  id         String  @id @default(uuid())
+  name       String  @db.VarChar(150)
+  marca      String  @db.VarChar(50)
+  quantity   Int
+  cost_price Decimal @db.Decimal(10, 2)
+  location   String  @db.VarChar(30)
+  sku        String  @unique @db.VarChar(30)
+  sale_price Decimal @db.Decimal(10, 2)
+
+  categoryId String     @map("category_id")
+  category   Categories @relation(fields: [categoryId], references: [id])
+
+  supplierId String    @map("supplier_id")
+  supplier   Suppliers @relation(fields: [supplierId], references: [id])
+
+  saleItems      SaleItems[]
+  stockMovements StockMovements[]
+
+  @@map("products")
+}
+
+model Sales {
+  id             String        @id @default(uuid())
+  total_amount   Decimal       @db.Decimal(10, 2)
+  payment_method PaymentMethod
+  created_at     DateTime      @default(now())
+  status         SaleStatus    @default(PENDING)
+
+  userId String @map("user_id")
+  user   Users  @relation(fields: [userId], references: [id])
+
+  saleItems      SaleItems[]
+  stockMovements StockMovements[]
+
+  @@map("sales")
+}
+
+model SaleItems {
+  id         String  @id @default(uuid())
+  quantity   Int
+  unit_price Decimal @db.Decimal(10, 2)
+  subtotal   Decimal @db.Decimal(10, 2)
+
+  saleId String @map("sale_id")
+  sale   Sales  @relation(fields: [saleId], references: [id])
+
+  productId String   @map("product_id")
+  product   Products @relation(fields: [productId], references: [id])
+
+  @@map("sale_items")
+}
+
+model StockMovements {
+  id         String            @id @default(uuid())
+  type       StockMovementType
+  reason     String            @db.VarChar(200)
+  created_at DateTime          @default(now())
+  quantity   Int
+
+  userId String @map("user_id")
+  user   Users  @relation(fields: [userId], references: [id])
+
+  productId String   @map("product_id")
+  product   Products @relation(fields: [productId], references: [id])
+
+  saleId String? @map("sale_id")
+  sale   Sales?  @relation(fields: [saleId], references: [id])
+
+  @@map("stock_movements")
+}
+
+enum Role {
+  ADMIN
+  USER
+
+  @@map("role")
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  PIX
+  BOLETO
+
+  @@map("payment_method")
+}
+
+enum SaleStatus {
+  PENDING
+  COMPLETED
+  CANCELED
+
+  @@map("sale_status")
+}
+
+enum StockMovementType {
+  IN
+  OUT
+
+  @@map("stock_movement_type")
+}
