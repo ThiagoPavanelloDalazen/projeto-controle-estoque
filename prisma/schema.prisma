@@ -16,6 +16,8 @@ model Users {
 
   sales          Sales[]
   stockMovements StockMovements[]
+
+  @@map("users")
 }
 
 model Categories {
@@ -23,6 +25,8 @@ model Categories {
   name String @unique @db.VarChar(50)
 
   products Products[]
+
+  @@map("categories")
 }
 
 model Suppliers {
@@ -33,6 +37,8 @@ model Suppliers {
   cnpj  String @unique @db.VarChar(14)
 
   products Products[]
+
+  @@map("suppliers")
 }
 
 model Products {
@@ -45,14 +51,16 @@ model Products {
   sku        String  @unique @db.VarChar(30)
   sale_price Decimal @db.Decimal(10, 2)
 
-  categoryId String
+  categoryId String     @map("category_id")
   category   Categories @relation(fields: [categoryId], references: [id])
 
-  supplierId String
+  supplierId String    @map("supplier_id")
   supplier   Suppliers @relation(fields: [supplierId], references: [id])
 
   saleItems      SaleItems[]
   stockMovements StockMovements[]
+
+  @@map("products")
 }
 
 model Sales {
@@ -62,11 +70,13 @@ model Sales {
   created_at     DateTime      @default(now())
   status         SaleStatus    @default(PENDING)
 
-  userId String
-  user   Users @relation(fields: [userId], references: [id])
+  userId String @map("user_id")
+  user   Users  @relation(fields: [userId], references: [id])
 
   saleItems      SaleItems[]
   stockMovements StockMovements[]
+
+  @@map("sales")
 }
 
 model SaleItems {
@@ -75,11 +85,13 @@ model SaleItems {
   unit_price Decimal @db.Decimal(10, 2)
   subtotal   Decimal @db.Decimal(10, 2)
 
-  saleId String
-  sale   Sales @relation(fields: [saleId], references: [id])
+  saleId String @map("sale_id")
+  sale   Sales  @relation(fields: [saleId], references: [id])
 
-  productId String
+  productId String   @map("product_id")
   product   Products @relation(fields: [productId], references: [id])
+
+  @@map("sale_items")
 }
 
 model StockMovements {
@@ -89,19 +101,23 @@ model StockMovements {
   created_at DateTime          @default(now())
   quantity   Int
 
-  userId String
-  user   Users @relation(fields: [userId], references: [id])
+  userId String @map("user_id")
+  user   Users  @relation(fields: [userId], references: [id])
 
-  productId String
+  productId String   @map("product_id")
   product   Products @relation(fields: [productId], references: [id])
 
-  saleId String?
+  saleId String? @map("sale_id")
   sale   Sales?  @relation(fields: [saleId], references: [id])
+
+  @@map("stock_movements")
 }
 
 enum Role {
   ADMIN
   USER
+
+  @@map("role")
 }
 
 enum PaymentMethod {
@@ -110,15 +126,21 @@ enum PaymentMethod {
   DEBIT_CARD
   PIX
   BOLETO
+
+  @@map("payment_method")
 }
 
 enum SaleStatus {
   PENDING
   COMPLETED
   CANCELED
+
+  @@map("sale_status")
 }
 
 enum StockMovementType {
   IN
   OUT
+
+  @@map("stock_movement_type")
 }
